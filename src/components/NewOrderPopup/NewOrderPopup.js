@@ -3,15 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import IoniconsIcon from 'react-native-vector-icons/Ionicons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 
-export default function NewOrderPopup() {
-
-    const onDecline = () => {
-        console.log('Decline order')
-    }
-    const onAccept = () => {
-        console.log('Accept order')
-    }
-
+export default function NewOrderPopup({ newOrder, onDecline, onAccept, duration, distance }) {
 
     return (
         <View style={styles.root}>
@@ -20,17 +12,17 @@ export default function NewOrderPopup() {
             </Pressable>
             <Pressable style={styles.container} onPress={onAccept}>
                 <View style={styles.row}>
-                    <Text style={styles.rowText} >UberX</Text>
+                    <Text style={styles.rowText} >{newOrder.type}</Text>
                     <View style={styles.user}>
                         <IoniconsIcon name='person' size={35} color='white' />
                     </View>
                     <Text style={styles.rowText}>
                         <EntypoIcon name='star' size={18} color='white' />
-                                 15
+                        {newOrder.user.rating}
                     </Text>
                 </View>
-                <Text style={styles.minuts}>2 min</Text>
-                <Text style={styles.dist}>0.7 mi</Text>
+                <Text style={styles.minuts}>{duration} min</Text>
+                <Text style={styles.dist}>{distance} mi</Text>
                 <View style={styles.bottomTextContainer}>
                     <Text style={styles.bottomText}>
                         Toward your destination
