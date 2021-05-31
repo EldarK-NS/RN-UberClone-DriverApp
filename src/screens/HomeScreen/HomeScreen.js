@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Dimensions, Pressable } from 'react-native'
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-import { key } from './../../../key';
+import { key } from '../../../key';
 import MapViewDirections from 'react-native-maps-directions';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import IoniconsIcon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import NewOrderPopup from './../../components/NewOrderPopup/NewOrderPopup';
+import { Auth, API, graphqlOperation } from 'aws-amplify';
+import { getCar } from '../../graphql/queries'
+import { updateCar } from '../../graphql/mutations'
 
 
 const GOOGLE_MAPS_APIKEY = key.API_GOOGLE
@@ -15,7 +18,7 @@ const origin = { latitude: 51.0280685, longitude: 71.4633028 }
 const destination = { latitude: 51.1630214183, longitude: 71.4713737168 }
 
 export default function HomeScreen() {
-    const [isOnline, setIsOnline] = useState(false)
+    const [car, setCar] = useState(null)
     const [order, setOrder] = useState(null)
     const [myPosition, setMyPosition] = useState(null)
 
@@ -35,6 +38,18 @@ export default function HomeScreen() {
         }
     })
 
+    const fetchCar = async () => {
+        try {
+            const userData = await Auth.currentAuthenticatedUser()
+            const carData = await API.graphql(graphqlOperation(getCar, { id: userData.attributes.sub }))
+            setCar(carData.data.getCar)
+        } catch (err) {
+            console.log(err)
+        }
+    }
+    useEffect(() => {
+        fetchCar()
+    }, [])
 
     const onDecline = () => {
         setNewOrder(null)
@@ -46,8 +61,23 @@ export default function HomeScreen() {
     }
 
 
-    const onGoPress = () => {
-        setIsOnline(!isOnline)
+    const onGoPress = async () => {
+        try {
+            const userData = await Auth.currentAuthenticatedUser()
+            const input = {
+                id: userData.attributes.sub,
+                isActive: !car.isActive
+            }
+            const updatedCarData = await API.graphql(
+                graphqlOperation(
+                    updateCar, { input }
+                )
+            )
+            console.log(updatedCarData.data.updateCar)
+            setCar(updatedCarData.data.updateCar)
+        } catch (err) {
+            console.log(err)
+        }
     }
 
 
@@ -122,7 +152,7 @@ export default function HomeScreen() {
                 </View>
             )
         }
-        if (isOnline) {
+        if (car?.isActive) {
             return (<Text style={styles.bottomText}>You are Online</Text>)
         }
         return (<Text style={styles.bottomText}>You are Off-line</Text>)
@@ -214,7 +244,7 @@ export default function HomeScreen() {
                 style={styles.goButton}
             >
                 <Text style={styles.goText}>
-                    {isOnline ? 'END' : 'Go'}
+                    {car?.isActive ? 'END' : 'Go'}
                 </Text>
             </Pressable>
 
